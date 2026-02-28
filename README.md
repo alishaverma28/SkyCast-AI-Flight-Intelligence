@@ -1,5 +1,8 @@
 # ✈️ SkyCast AI – Flight Market Intelligence Platform
 
+[🔗 Live Demo](https://skycast-ai-flight-intelligence-2twpsfrisp47j9yvaadeae.streamlit.app/)
+
+
 ## 🚀 Overview
 
 SkyCast AI is an end-to-end Flight Market Intelligence Platform that combines:
