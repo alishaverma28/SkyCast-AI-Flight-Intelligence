@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Airfare Predictor</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 40px; background-color: #f4f7f6; }
+        .container { max-width: 600px; margin: 0 auto; padding: 30px; background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        h1 { color: #333; text-align: center; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-group { display: flex; flex-direction: column; }
+        label { margin-bottom: 8px; font-weight: 600; color: #555; }
+        input { padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; }
+        button { grid-column: 1 / -1; padding: 15px; background-color: #007bff; color: white; border: none; border-radius: 5px; font-size: 18px; cursor: pointer; transition: background-color 0.2s; }
+        button:hover { background-color: #0056b3; }
+        #result { margin-top: 30px; text-align: center; font-size: 24px; font-weight: 700; color: #333; }
+        #result-value { color: #007bff; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Airfare Price Predictor</h1>
+        
+        <form id="fare-form">
+            <div class="form-grid">
+                
+                <div class="form-group">
+                    <label for="nsmiles">Distance (nsmiles)</label>
+                    <input type="number" id="nsmiles" name="nsmiles" value="1589">
+                </div>
+                <div class="form-group">
+                    <label for="passengers">Passengers</label>
+                    <input type="number" id="passengers" name="passengers" value="229">
+                </div>
+                <div class="form-group">
+                    <label for="large_ms">Largest Carrier MS (%)</label>
+                    <input type="number" step="0.01" id="large_ms" name="large_ms" value="0.6179">
+                </div>
+                <div class="form-group">
+                    <label for="lf_ms">Low-Cost Carrier MS (%)</label>
+                    <input type="number" step="0.01" id="lf_ms" name="lf_ms" value="0.3444">
+                </div>
+                <div class="form-group">
+                    <label for="competition_ratio">Competition Ratio</label>
+                    <input type="number" step="0.01" id="competition_ratio" name="competition_ratio" value="1.794">
+                </div>
+                <div class="form-group">
+                    <label for="Year">Year</label>
+                    <input type="number" id="Year" name="Year" value="2023">
+                </div>
+                <div class="form-group">
+                    <label for="quarter">Quarter</label>
+                    <input type="number" id="quarter" name="quarter" value="3">
+                </div>
+                <div class="form-group">
+                    <label for="carrier_lg">Largest Carrier</label>
+                    <input type="text" id="carrier_lg" name="carrier_lg" value="AA">
+                </div>
+                <div class="form-group">
+                    <label for="carrier_low">Low-Cost Carrier</label>
+                    <input type="text" id="carrier_low" name="carrier_low" value="DL">
+                </div>
+                <div class="form-group">
+                    <label for="airport_1">Origin Airport</label>
+                    <input type="text" id="airport_1" name="airport_1" value="JFK">
+                </div>
+                <div class="form-group">
+                    <label for="airport_2">Destination Airport</label>
+                    <input type="text" id="airport_2" name="airport_2" value="LAX">
+                </div>
+                <div class="form-group">
+                    <label for="route">Route (e.g., JFK_LAX)</label>
+                    <input type="text" id="route" name="route" value="JFK_LAX">
+                </div>
+                <div class="form-group">
+                    <label for="year_quarter">Year-Quarter (e.g., 2023_Q3)</label>
+                    <input type="text" id="year_quarter" name="year_quarter" value="2023_Q3">
+                </div>
+            </div>
+            
+            <button type="submit">Predict Fare</button>
+        </form>
+        
+        <div id="result">
+            Predicted Fare: <span id="result-value">...</span>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('fare-form');
+        const resultValue = document.getElementById('result-value');
+        
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            resultValue.textContent = "Calculating...";
+
+            // This line is now guaranteed to work
+            const formData = new FormData(form); 
+            const data = {};
+            
+            formData.forEach((value, key) => {
+                if (key === 'Year' || key === 'quarter') {
+                    data[key] = parseInt(value, 10); 
+                } else if (key === 'nsmiles' || key === 'passengers' || key === 'large_ms' || key === 'lf_ms' || key === 'competition_ratio') {
+                    data[key] = parseFloat(value); 
+                } else {
+                    data[key] = value; 
+                }
+            });
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const err = await response.json(); 
+                    throw new Error(JSON.stringify(err.detail));
+                }
+
+                const result = await response.json();
+                resultValue.textContent = `$${result.predicted_fare}`;
+
+            } catch (error) {
+                console.error('Error:', error);
+                resultValue.textContent = "Error. Check console.";
+                resultValue.textContent = `Error: ${error.message}`; 
+            }
+        });
+    </script>
+
+</body>
+</html>
